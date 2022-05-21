@@ -2,12 +2,17 @@ import React from "react";
 import { Stack, TextField, Button } from "@mui/material";
 import { useForm } from "react-hook-form";
 import FormLayout from "../../src/layouts/FormLayout";
-import { useRegisterMutation } from "../../src/generated/graphql";
+import {
+  RegisterInput,
+  useRegisterMutation,
+} from "../../src/generated/graphql";
 import toast from "react-hot-toast";
+import { useRouter } from "next/router";
 
 interface RegisterProps {}
 
 const Register: React.FC<RegisterProps> = ({}) => {
+  const router = useRouter();
   const [{ error }, submit] = useRegisterMutation();
 
   const {
@@ -15,20 +20,16 @@ const Register: React.FC<RegisterProps> = ({}) => {
     formState: { errors },
     setError,
     handleSubmit,
-  } = useForm<{
-    name: string;
-    email: string;
-    password: string;
-  }>();
+  } = useForm<RegisterInput>();
 
-  const handleRegister = async (values: {
-    name: string;
-    email: string;
-    password: string;
-  }) => {
+  const handleRegister = async (values: RegisterInput) => {
     if (error) toast.error(error.message);
 
     const response = await submit(values);
+
+    if (response.data?.register.user) {
+      router.push("/");
+    }
 
     if (response.data?.register.errors) {
       const errors = response.data.register.errors;
@@ -84,7 +85,12 @@ const Register: React.FC<RegisterProps> = ({}) => {
               errors?.password?.message ? errors.password.message : ""
             }
           />
-          <Button variant="contained" type="submit" size="large">
+          <Button
+            sx={{ background: "#14C38E", ":hover": { background: "#13ae7f" } }}
+            variant="contained"
+            type="submit"
+            size="large"
+          >
             Register
           </Button>
         </Stack>

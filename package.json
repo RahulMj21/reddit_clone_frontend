@@ -17,6 +17,7 @@
     "@emotion/styled": "latest",
     "@mui/icons-material": "latest",
     "@mui/material": "latest",
+    "@urql/exchange-graphcache": "^4.4.0",
     "graphql": "^16.5.0",
     "next": "latest",
     "react": "latest",
