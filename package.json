@@ -20,10 +20,12 @@
     "@urql/exchange-graphcache": "^4.4.0",
     "graphql": "^16.5.0",
     "next": "latest",
+    "next-urql": "^3.3.2",
     "react": "latest",
     "react-dom": "latest",
     "react-hook-form": "^7.31.1",
     "react-hot-toast": "^2.2.0",
+    "react-is": "^18.1.0",
     "urql": "^2.2.0"
   },
   "devDependencies": {

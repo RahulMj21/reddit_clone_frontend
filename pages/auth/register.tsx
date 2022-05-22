@@ -8,6 +8,8 @@ import {
 } from "../../src/generated/graphql";
 import toast from "react-hot-toast";
 import { useRouter } from "next/router";
+import createUrqlClient from "../../src/utils/createUrqlClient";
+import { withUrqlClient } from "next-urql";
 
 interface RegisterProps {}
 
@@ -73,6 +75,7 @@ const Register: React.FC<RegisterProps> = ({}) => {
           <TextField
             error={errors?.password?.message ? true : false}
             id="password"
+            type="password"
             label="Password"
             required
             {...register("password", {
@@ -99,4 +102,4 @@ const Register: React.FC<RegisterProps> = ({}) => {
   );
 };
 
-export default Register;
+export default withUrqlClient(createUrqlClient)(Register);

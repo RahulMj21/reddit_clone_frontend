@@ -5,6 +5,8 @@ import FormLayout from "../../src/layouts/FormLayout";
 import toast from "react-hot-toast";
 import { LoginInput, useLoginMutation } from "../../src/generated/graphql";
 import { useRouter } from "next/router";
+import { withUrqlClient } from "next-urql";
+import createUrqlClient from "../../src/utils/createUrqlClient";
 
 interface LoginProps {}
 
@@ -59,6 +61,7 @@ const Login: React.FC<LoginProps> = ({}) => {
           <TextField
             error={errors?.password?.message ? true : false}
             id="password"
+            type="password"
             label="Password"
             required
             {...register("password", {
@@ -85,4 +88,4 @@ const Login: React.FC<LoginProps> = ({}) => {
   );
 };
 
-export default Login;
+export default withUrqlClient(createUrqlClient)(Login);
