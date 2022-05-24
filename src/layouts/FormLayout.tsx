@@ -4,15 +4,20 @@ import React, { ReactNode } from "react";
 interface FormLayoutProps {
   children: ReactNode;
   heading: string;
+  withNavbar?: Boolean;
 }
 
-const FormLayout: React.FC<FormLayoutProps> = ({ children, heading }) => {
+const FormLayout: React.FC<FormLayoutProps> = ({
+  children,
+  heading,
+  withNavbar = false,
+}) => {
   return (
     <Container
       maxWidth="sm"
       sx={{
         width: "35rem",
-        minHeight: "100vh",
+        minHeight: `${withNavbar ? "calc(100vh - 4rem)" : "100vh"}`,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
