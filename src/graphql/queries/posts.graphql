@@ -1,0 +1,14 @@
+query Posts($limit: Int!, $cursor: DateTime) {
+  posts(limit: $limit, cursor: $cursor) {
+    hasMore
+    posts {
+      id
+      title
+      descriptionSnippet
+      creatorId
+      points
+      createdAt
+      updatedAt
+    }
+  }
+}

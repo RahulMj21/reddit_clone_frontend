@@ -7,12 +7,16 @@ import { LoginInput, useLoginMutation } from "../../src/generated/graphql";
 import { useRouter } from "next/router";
 import { withUrqlClient } from "next-urql";
 import createUrqlClient from "../../src/utils/createUrqlClient";
+import useIsGuest from "../../src/utils/useIsGuest";
+import Loader from "../../src/components/Loader";
 
 interface LoginProps {}
 
 const Login: React.FC<LoginProps> = ({}) => {
+  const { fetching: fetchingMe } = useIsGuest();
   const router = useRouter();
-  const [{ error }, submit] = useLoginMutation();
+  const nextpath = router.query?.next ? router.query.next : "/";
+  const [{ error, fetching }, submit] = useLoginMutation();
 
   const {
     register,
@@ -28,7 +32,7 @@ const Login: React.FC<LoginProps> = ({}) => {
 
     // success
     if (response.data?.login.user) {
-      router.push("/");
+      router.replace(`${nextpath}`);
     }
 
     // errors
@@ -45,7 +49,9 @@ const Login: React.FC<LoginProps> = ({}) => {
     }
   };
 
-  return (
+  return fetching || fetchingMe ? (
+    <Loader />
+  ) : (
     <FormLayout heading="Login">
       <form onSubmit={handleSubmit(handleLogin)}>
         <Stack typeof="form" direction={"column"} gap={4} my={4}>

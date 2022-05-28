@@ -10,12 +10,15 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/router";
 import createUrqlClient from "../../src/utils/createUrqlClient";
 import { withUrqlClient } from "next-urql";
+import useIsGuest from "../../src/utils/useIsGuest";
+import Loader from "../../src/components/Loader";
 
 interface RegisterProps {}
 
 const Register: React.FC<RegisterProps> = ({}) => {
   const router = useRouter();
-  const [{ error }, submit] = useRegisterMutation();
+  const { fetching: fetchingMe } = useIsGuest();
+  const [{ fetching, error }, submit] = useRegisterMutation();
 
   const {
     register,
@@ -46,7 +49,9 @@ const Register: React.FC<RegisterProps> = ({}) => {
     }
   };
 
-  return (
+  return fetching || fetchingMe ? (
+    <Loader />
+  ) : (
     <FormLayout heading="Register">
       <form onSubmit={handleSubmit(handleRegister)}>
         <Stack typeof="form" direction={"column"} gap={4} my={4}>

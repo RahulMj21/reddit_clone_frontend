@@ -4,20 +4,20 @@ import { withUrqlClient } from "next-urql";
 import { useRouter } from "next/router";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
+import Loader from "../../src/components/Loader";
 import { useResetPasswordMutation } from "../../src/generated/graphql";
 import FormLayout from "../../src/layouts/FormLayout";
 import createUrqlClient from "../../src/utils/createUrqlClient";
-
-interface ResetPasswordProps {
-  token: string;
-}
+import useIsGuest from "../../src/utils/useIsGuest";
 
 type InputType = {
   newPassword: string;
 };
 
-const ResetPassword: NextPage<ResetPasswordProps> = ({ token }) => {
+const ResetPassword: NextPage<{}> = ({}) => {
   const router = useRouter();
+  const token = router.query?.token;
+  const { fetching: fetchingMe } = useIsGuest();
   const [{ fetching, error }, submit] = useResetPasswordMutation();
   const {
     register,
@@ -28,9 +28,8 @@ const ResetPassword: NextPage<ResetPasswordProps> = ({ token }) => {
 
   const handleResetPassword = async ({ newPassword }: InputType) => {
     if (error) toast.error(error.message);
-    console.log("token--> ", token);
 
-    const response = await submit({ token, newPassword });
+    const response = await submit({ token: token as string, newPassword });
 
     // success
     if (response.data?.resetPassword.user) {
@@ -51,7 +50,9 @@ const ResetPassword: NextPage<ResetPasswordProps> = ({ token }) => {
     }
   };
 
-  return (
+  return fetching || fetchingMe ? (
+    <Loader />
+  ) : (
     <FormLayout heading="ResetPassword">
       <form onSubmit={handleSubmit(handleResetPassword)}>
         <Stack typeof="form" direction={"column"} gap={4} my={4}>
@@ -83,12 +84,6 @@ const ResetPassword: NextPage<ResetPasswordProps> = ({ token }) => {
       </form>
     </FormLayout>
   );
-};
-
-ResetPassword.getInitialProps = ({ query }) => {
-  return {
-    token: query.token as string,
-  };
 };
 
 export default withUrqlClient(createUrqlClient)(ResetPassword);

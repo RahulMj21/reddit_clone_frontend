@@ -13,10 +13,11 @@ import {
 } from "../src/generated/graphql";
 import FormLayout from "../src/layouts/FormLayout";
 import createUrqlClient from "../src/utils/createUrqlClient";
+import { useIsAuth } from "../src/utils/useIsAuth";
 
 const createPost: React.FC<{}> = ({}) => {
   const router = useRouter();
-  const [{ data, fetching: fetchingMe }] = useMeQuery();
+  const { fetching: fetchingMe, data } = useIsAuth();
   const [{ fetching, error }, submit] = useCreatePostMutation();
   const {
     register,
@@ -49,11 +50,7 @@ const createPost: React.FC<{}> = ({}) => {
     }
   };
 
-  useEffect(() => {
-    if (!fetching && !data?.me) router.push("/auth/login");
-  }, [!data?.me]);
-
-  return fetching || fetchingMe ? (
+  return fetching || fetchingMe || !data?.me ? (
     <Loader />
   ) : (
     <>
@@ -84,7 +81,7 @@ const createPost: React.FC<{}> = ({}) => {
               {...register("description", {
                 minLength: {
                   value: 10,
-                  message: "description must be atleast 1 characters long",
+                  message: "description must be atleast 10 characters long",
                 },
               })}
               helperText={

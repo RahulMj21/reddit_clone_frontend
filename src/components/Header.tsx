@@ -9,7 +9,7 @@ interface HeaderProps {}
 const Header: React.FC<HeaderProps> = ({}) => {
   const router = useRouter();
   const [domLoaded, setDomLoaded] = useState(false);
-  const [{ fetching, data }] = useMeQuery({
+  const [{ data }] = useMeQuery({
     pause: !domLoaded,
   });
 
@@ -20,12 +20,19 @@ const Header: React.FC<HeaderProps> = ({}) => {
   }, []);
 
   return (
-    <Box>
+    <Box
+      sx={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100%",
+        background: "#21c795",
+      }}
+    >
       <Container
-        maxWidth="xl"
+        maxWidth="lg"
         sx={{
           width: "100%",
-          background: "#21c795",
           height: "4rem",
           display: "flex",
           alignItems: "center",
@@ -38,7 +45,7 @@ const Header: React.FC<HeaderProps> = ({}) => {
           fontSize="1.3rem"
           sx={{ cursor: "pointer" }}
         >
-          Logo
+          {"<"}LOGO{">"}
         </Typography>
         {data?.me?.id ? (
           <Stack direction="row" alignItems="center" gap={"1.5rem"}>
@@ -52,13 +59,17 @@ const Header: React.FC<HeaderProps> = ({}) => {
             </Button>
           </Stack>
         ) : (
-          <Box>
-            <NextLink href="/auth/register">
-              <Link mr={2}>Register</Link>
-            </NextLink>
-            <NextLink href="/auth/login">
-              <Link>Login</Link>
-            </NextLink>
+          <Box sx={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
+            <Button onClick={() => router.push("/auth/register")}>
+              Register
+            </Button>
+            <Button onClick={() => router.push("/auth/login")}>Login</Button>
+            <Button
+              onClick={() => router.push("/createpost")}
+              variant="contained"
+            >
+              Create
+            </Button>
           </Box>
         )}
       </Container>

@@ -10,10 +10,12 @@ import {
 } from "../../src/generated/graphql";
 import FormLayout from "../../src/layouts/FormLayout";
 import createUrqlClient from "../../src/utils/createUrqlClient";
+import useIsGuest from "../../src/utils/useIsGuest";
 
 interface ForgotpasswordProps {}
 
 const Forgotpassword: React.FC<ForgotpasswordProps> = ({}) => {
+  const { fetching: fetchingMe } = useIsGuest();
   const [{ fetching, error }, submit] = useForgotPasswordMutation();
   const {
     register,
@@ -48,7 +50,7 @@ const Forgotpassword: React.FC<ForgotpasswordProps> = ({}) => {
     }
   };
 
-  return fetching ? (
+  return fetching || fetchingMe ? (
     <Loader />
   ) : (
     <FormLayout heading="Forgot Password">
