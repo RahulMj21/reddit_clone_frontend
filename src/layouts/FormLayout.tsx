@@ -18,6 +18,7 @@ const FormLayout: React.FC<FormLayoutProps> = ({
       sx={{
         width: "35rem",
         minHeight: `${withNavbar ? "calc(100vh - 4rem)" : "100vh"}`,
+        paddingTop: `${withNavbar ? "7rem" : 0}`,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

@@ -44,6 +44,7 @@ export type Mutation = {
   register: UserResponse;
   resetPassword: UserResponse;
   updatePost: PostResponse;
+  vote: Scalars['Boolean'];
 };
 
 
@@ -81,6 +82,12 @@ export type MutationUpdatePostArgs = {
   input: UpdatePostInput;
 };
 
+
+export type MutationVoteArgs = {
+  postId: Scalars['Int'];
+  value: Scalars['Int'];
+};
+
 export type PaginatedPosts = {
   __typename?: 'PaginatedPosts';
   hasMore: Scalars['Boolean'];
@@ -98,6 +105,8 @@ export type Post = {
   points: Scalars['Float'];
   title: Scalars['String'];
   updatedAt: Scalars['DateTime'];
+  updoots: Array<Updoot>;
+  voteStatus?: Maybe<Scalars['Int']>;
 };
 
 export type PostInput = {
@@ -147,6 +156,15 @@ export type UpdatePostInput = {
   title: Scalars['String'];
 };
 
+export type Updoot = {
+  __typename?: 'Updoot';
+  post: Post;
+  postId: Scalars['Int'];
+  user: User;
+  userId: Scalars['Int'];
+  value: Scalars['Int'];
+};
+
 export type User = {
   __typename?: 'User';
   createdAt: Scalars['String'];
@@ -154,6 +172,7 @@ export type User = {
   id: Scalars['Int'];
   name: Scalars['String'];
   updatedAt: Scalars['String'];
+  updoots: Array<Updoot>;
 };
 
 export type UserResponse = {
@@ -164,9 +183,9 @@ export type UserResponse = {
 
 export type RegularErrorFragment = { __typename?: 'FieldError', field: string, message: string };
 
-export type RegularPostFragment = { __typename?: 'Post', id: number, title: string, description: string, creatorId: number, points: number, createdAt: any, updatedAt: any };
+export type RegularPostFragment = { __typename?: 'Post', id: number, title: string, descriptionSnippet: string, creatorId: number, points: number, createdAt: any, updatedAt: any, voteStatus?: number | null };
 
-export type RegularPostResponseFragment = { __typename?: 'PostResponse', errors?: Array<{ __typename?: 'FieldError', field: string, message: string }> | null, post?: { __typename?: 'Post', id: number, title: string, description: string, creatorId: number, points: number, createdAt: any, updatedAt: any } | null };
+export type RegularPostResponseFragment = { __typename?: 'PostResponse', errors?: Array<{ __typename?: 'FieldError', field: string, message: string }> | null, post?: { __typename?: 'Post', id: number, title: string, descriptionSnippet: string, creatorId: number, points: number, createdAt: any, updatedAt: any, voteStatus?: number | null } | null };
 
 export type RegularUserFragment = { __typename?: 'User', id: number, email: string, name: string, createdAt: string };
 
@@ -177,7 +196,7 @@ export type CreatePostMutationVariables = Exact<{
 }>;
 
 
-export type CreatePostMutation = { __typename?: 'Mutation', createPost: { __typename?: 'PostResponse', errors?: Array<{ __typename?: 'FieldError', field: string, message: string }> | null, post?: { __typename?: 'Post', id: number, title: string, description: string, creatorId: number, points: number, createdAt: any, updatedAt: any } | null } };
+export type CreatePostMutation = { __typename?: 'Mutation', createPost: { __typename?: 'PostResponse', errors?: Array<{ __typename?: 'FieldError', field: string, message: string }> | null, post?: { __typename?: 'Post', id: number, title: string, descriptionSnippet: string, creatorId: number, points: number, createdAt: any, updatedAt: any, voteStatus?: number | null } | null } };
 
 export type ForgotPasswordMutationVariables = Exact<{
   email: Scalars['String'];
@@ -216,6 +235,14 @@ export type ResetPasswordMutationVariables = Exact<{
 
 export type ResetPasswordMutation = { __typename?: 'Mutation', resetPassword: { __typename?: 'UserResponse', errors?: Array<{ __typename?: 'FieldError', field: string, message: string }> | null, user?: { __typename?: 'User', id: number, email: string, name: string, createdAt: string } | null } };
 
+export type VoteMutationVariables = Exact<{
+  value: Scalars['Int'];
+  postId: Scalars['Int'];
+}>;
+
+
+export type VoteMutation = { __typename?: 'Mutation', vote: boolean };
+
 export type MeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -227,7 +254,7 @@ export type PostsQueryVariables = Exact<{
 }>;
 
 
-export type PostsQuery = { __typename?: 'Query', posts: { __typename?: 'PaginatedPosts', hasMore: boolean, posts?: Array<{ __typename?: 'Post', id: number, title: string, descriptionSnippet: string, creatorId: number, points: number, createdAt: any, updatedAt: any }> | null } };
+export type PostsQuery = { __typename?: 'Query', posts: { __typename?: 'PaginatedPosts', hasMore: boolean, posts?: Array<{ __typename?: 'Post', id: number, title: string, descriptionSnippet: string, creatorId: number, points: number, createdAt: any, updatedAt: any, voteStatus?: number | null, creator: { __typename?: 'User', id: number, name: string } }> | null } };
 
 export const RegularErrorFragmentDoc = gql`
     fragment RegularError on FieldError {
@@ -239,11 +266,12 @@ export const RegularPostFragmentDoc = gql`
     fragment RegularPost on Post {
   id
   title
-  description
+  descriptionSnippet
   creatorId
   points
   createdAt
   updatedAt
+  voteStatus
 }
     `;
 export const RegularPostResponseFragmentDoc = gql`
@@ -343,6 +371,15 @@ export const ResetPasswordDocument = gql`
 export function useResetPasswordMutation() {
   return Urql.useMutation<ResetPasswordMutation, ResetPasswordMutationVariables>(ResetPasswordDocument);
 };
+export const VoteDocument = gql`
+    mutation Vote($value: Int!, $postId: Int!) {
+  vote(value: $value, postId: $postId)
+}
+    `;
+
+export function useVoteMutation() {
+  return Urql.useMutation<VoteMutation, VoteMutationVariables>(VoteDocument);
+};
 export const MeDocument = gql`
     query Me {
   me {
@@ -366,6 +403,11 @@ export const PostsDocument = gql`
       points
       createdAt
       updatedAt
+      voteStatus
+      creator {
+        id
+        name
+      }
     }
   }
 }

@@ -17,8 +17,8 @@ import { useIsAuth } from "../src/utils/useIsAuth";
 
 const createPost: React.FC<{}> = ({}) => {
   const router = useRouter();
-  const { fetching: fetchingMe, data } = useIsAuth();
-  const [{ fetching, error }, submit] = useCreatePostMutation();
+  const { fetching: fetchingMe, data: dataMe } = useIsAuth();
+  const [{ fetching, error, data }, submit] = useCreatePostMutation();
   const {
     register,
     handleSubmit,
@@ -50,7 +50,7 @@ const createPost: React.FC<{}> = ({}) => {
     }
   };
 
-  return fetching || fetchingMe || !data?.me ? (
+  return (fetching && !data?.createPost.post) || (fetchingMe && !dataMe?.me) ? (
     <Loader />
   ) : (
     <>

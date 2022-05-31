@@ -27,6 +27,7 @@ const Header: React.FC<HeaderProps> = ({}) => {
         left: 0,
         width: "100%",
         background: "#21c795",
+        zIndex: 1000,
       }}
     >
       <Container

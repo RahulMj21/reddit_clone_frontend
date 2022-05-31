@@ -3,8 +3,9 @@ import { Box, Button, Container, Stack, Typography } from "@mui/material";
 import createUrqlClient from "../src/utils/createUrqlClient";
 import { withUrqlClient } from "next-urql";
 import Header from "../src/components/Header";
-import { usePostsQuery } from "../src/generated/graphql";
+import { Post, usePostsQuery } from "../src/generated/graphql";
 import { useState } from "react";
+import SinglePost from "../src/components/SinglePost";
 
 const Home: NextPage = () => {
   const [variables, setVariables] = useState({
@@ -19,26 +20,14 @@ const Home: NextPage = () => {
   return (
     <Box sx={{ minHeight: "100vh", width: "100%", paddingTop: "5rem" }}>
       <Header />
-      <Container maxWidth="lg" sx={{ padding: "2rem 0" }}>
+      <Container maxWidth="md" sx={{ padding: "2.5rem 1rem" }}>
         <Typography variant="h3" mb={2} textAlign="center">
           Posts
         </Typography>
         {data?.posts.posts ? (
           <Stack>
             {data.posts.posts.map((post) => (
-              <Box
-                key={post.createdAt}
-                boxShadow={2}
-                p={2}
-                mb={4}
-                border={1}
-                borderColor="#c3c2c2"
-              >
-                <Typography mb={1.5} fontSize={"1.7rem"} variant="h4">
-                  {post.title}
-                </Typography>
-                <Typography>{post.descriptionSnippet}</Typography>
-              </Box>
+              <SinglePost post={post as Post} key={post.id} />
             ))}
             {data.posts.posts && data.posts.hasMore && (
               <Button

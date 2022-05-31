@@ -6,17 +6,15 @@ import {
   fetchExchange,
   stringifyVariables,
 } from "urql";
+import { gql } from "@urql/core";
 import { pipe, tap } from "wonka";
 import {
-  CreatePostMutation,
   LoginMutation,
   LogoutMutation,
   MeDocument,
   MeQuery,
-  PostsDocument,
-  PostsQuery,
   RegisterMutation,
-  usePostsQuery,
+  VoteMutationVariables,
 } from "../generated/graphql";
 import { betterUpdateQuery } from "./betterUpdateQuery";
 
@@ -88,6 +86,31 @@ const createUrqlClient = (ssrExchange: any) => ({
       },
       updates: {
         Mutation: {
+          vote: (_result, args, cache, info) => {
+            const { postId, value } = args as VoteMutationVariables;
+            const data = cache.readFragment(
+              gql`
+                fragment _ on Post {
+                  id
+                  points
+                  voteStatus
+                }
+              `,
+              { id: postId }
+            );
+            if (data) {
+              if (data.voteStatus === value) return;
+              const newPoints = data.points + value;
+              cache.writeFragment(
+                gql`
+                  fragment __ on Post {
+                    points
+                  }
+                `,
+                { id: postId, points: newPoints, voteStatus: value }
+              );
+            }
+          },
           login: (_result, args, cache, info) => {
             betterUpdateQuery<LoginMutation, MeQuery>(
               cache,
@@ -133,21 +156,15 @@ const createUrqlClient = (ssrExchange: any) => ({
               }
             );
           },
-          // createPost: (_result, args, cache, info) => {
-          //   betterUpdateQuery<CreatePostMutation, PostsQuery>(
-          //     cache,
-          //     { query: PostsDocument },
-          //     _result,
-          //     (result, query) => {
-          //       if (!result.createPost.errors) {
-          //         return query;
-          //       }
-          //       return {
-          //         // posts:1
-          //       };
-          //     }
-          //   );
-          // },
+          createPost: (_result, args, cache, info) => {
+            const allFields = cache.inspectFields("Query");
+            const fieldsInfo = allFields.filter(
+              (field) => field.fieldName === "posts"
+            );
+            fieldsInfo.forEach((fi) => {
+              cache.invalidate("Query", "posts", fi.arguments);
+            });
+          },
         },
       },
     }),

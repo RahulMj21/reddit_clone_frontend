@@ -9,6 +9,11 @@ query Posts($limit: Int!, $cursor: DateTime) {
       points
       createdAt
       updatedAt
+      voteStatus
+      creator {
+        id
+        name
+      }
     }
   }
 }
