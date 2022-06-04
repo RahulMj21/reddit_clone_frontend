@@ -1,17 +1,31 @@
-import { Box, Button, IconButton, Typography } from "@mui/material";
+import { Edit } from "@mui/icons-material";
+import DeleteIcon from "@mui/icons-material/Delete";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { Box, Button, Typography } from "@mui/material";
+import NextLink from "next/link";
+import { useRouter } from "next/router";
 import React, { useState } from "react";
-import { Post, useVoteMutation } from "../generated/graphql";
 import toast from "react-hot-toast";
+import {
+  Post,
+  useDeletePostMutation,
+  useMeQuery,
+  useUpdatePostMutation,
+  useVoteMutation,
+} from "../generated/graphql";
 
 interface SinglePostProps {
   post: Post;
 }
 
 const SinglePost: React.FC<SinglePostProps> = ({ post }) => {
+  const router = useRouter();
   const [voting, setVoting] = useState(false);
   const [_, submit] = useVoteMutation();
+  const [{ data: deletePostData, fetching: deletePostFetching }, deletePost] =
+    useDeletePostMutation();
+  const [{ data }] = useMeQuery();
 
   const doVote = async (vote: string) => {
     setVoting(true);
@@ -42,7 +56,6 @@ const SinglePost: React.FC<SinglePostProps> = ({ post }) => {
         alignItems="center"
       >
         <Button
-          // color="success"
           color={post.voteStatus === 1 ? "secondary" : "inherit"}
           variant="contained"
           disabled={voting}
@@ -60,14 +73,47 @@ const SinglePost: React.FC<SinglePostProps> = ({ post }) => {
           <ExpandMoreIcon />
         </Button>
       </Box>
-      <Box>
+      <Box flex={1}>
         <Typography fontSize="0.9rem" color={"GrayText"}>
           Posted by {post.creator.name}
         </Typography>
-        <Typography mb={1} fontSize={"1.7rem"} variant="h4">
-          {post.title}
-        </Typography>
-        <Typography>{post.descriptionSnippet}</Typography>
+        <NextLink href={`/post/${post.id}`}>
+          <a
+            style={{
+              color: "#333",
+              fontSize: "1.6rem",
+              textDecoration: "none",
+            }}
+          >
+            {post.title}
+          </a>
+        </NextLink>
+        <Typography mb={2}>{post.descriptionSnippet}</Typography>
+        {post.creator.id === data?.me?.id && (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              marginLeft: "auto",
+              width: "7.5rem",
+              textAlign: "right",
+            }}
+          >
+            <Button
+              color="inherit"
+              onClick={() => router.push(`/post/update/${post.id}`)}
+            >
+              <Edit />
+            </Button>
+            <Button
+              disabled={deletePostFetching}
+              color="inherit"
+              onClick={() => deletePost({ id: post.id })}
+            >
+              <DeleteIcon />
+            </Button>
+          </Box>
+        )}
       </Box>
     </Box>
   );

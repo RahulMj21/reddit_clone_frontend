@@ -4,41 +4,48 @@ import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import Header from "../src/components/Header";
-import Loader from "../src/components/Loader";
+import Header from "../../../src/components/Header";
+import Loader from "../../../src/components/Loader";
 import {
   PostInput,
-  useCreatePostMutation,
-  useMeQuery,
-} from "../src/generated/graphql";
-import FormLayout from "../src/layouts/FormLayout";
-import createUrqlClient from "../src/utils/createUrqlClient";
-import { useIsAuth } from "../src/utils/useIsAuth";
+  useUpdatePostMutation,
+} from "../../../src/generated/graphql";
+import FormLayout from "../../../src/layouts/FormLayout";
+import createUrqlClient from "../../../src/utils/createUrqlClient";
+import useFetchSinglePost from "../../../src/utils/useFetchSinglePost";
+import { useIsAuth } from "../../../src/utils/useIsAuth";
 
-const CreatePost: React.FC<{}> = ({}) => {
+const UpdatePost = ({}) => {
+  const [defaults, setDefaults] = useState({ title: "", description: "" });
   const router = useRouter();
+  const {
+    data: existingPost,
+    fetching: existingPostFetching,
+    id,
+  } = useFetchSinglePost();
   const { fetching: fetchingMe, data: dataMe } = useIsAuth();
-  const [{ fetching, error, data }, submit] = useCreatePostMutation();
+  const [{ fetching, error, data }, submit] = useUpdatePostMutation();
   const {
     register,
     handleSubmit,
     formState: { errors },
     setError,
+    setValue,
   } = useForm<PostInput>();
 
-  const handleCreatePost = async (input: PostInput) => {
+  const handleUpdatePost = async (input: PostInput) => {
     if (error) toast.error(error.message);
 
-    const response = await submit({ input });
+    const response = await submit({ input: { id, ...input } });
 
     // success
-    if (response.data?.createPost?.post) {
-      router.push("/");
+    if (response.data?.updatePost?.post) {
+      router.back();
     }
 
     // errors
-    if (response.data?.createPost?.errors) {
-      const errors = response.data.createPost.errors;
+    if (response.data?.updatePost?.errors) {
+      const errors = response.data.updatePost.errors;
 
       errors.forEach((error) => {
         setError(error.field as "title" | "description", {
@@ -50,14 +57,20 @@ const CreatePost: React.FC<{}> = ({}) => {
     }
   };
 
-  return (fetching && !data?.createPost?.post) ||
+  useEffect(() => {
+    setValue("title", existingPost?.post.post?.title as string);
+    setValue("description", existingPost?.post.post?.description as string);
+  }, [existingPost?.post.post]);
+
+  return (fetching && !data?.updatePost?.post) ||
+    (existingPostFetching && !existingPost?.post.post) ||
     (fetchingMe && !dataMe?.me) ? (
     <Loader />
   ) : (
     <>
       <Header />
-      <FormLayout heading="Create Post" withNavbar={true}>
-        <form onSubmit={handleSubmit(handleCreatePost)}>
+      <FormLayout heading="Update Post" withNavbar={true}>
+        <form onSubmit={handleSubmit(handleUpdatePost)}>
           <Stack typeof="form" direction={"column"} gap={4} my={4}>
             <TextField
               error={errors?.title?.message ? true : false}
@@ -98,7 +111,7 @@ const CreatePost: React.FC<{}> = ({}) => {
               type="submit"
               size="large"
             >
-              Create Post
+              Update Post
             </Button>
           </Stack>
         </form>
@@ -107,4 +120,4 @@ const CreatePost: React.FC<{}> = ({}) => {
   );
 };
 
-export default withUrqlClient(createUrqlClient)(CreatePost);
+export default withUrqlClient(createUrqlClient, { ssr: true })(UpdatePost);

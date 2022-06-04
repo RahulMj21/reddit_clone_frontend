@@ -1,10 +1,14 @@
 fragment RegularPost on Post {
   id
   title
-  descriptionSnippet
+  description
   creatorId
   points
   createdAt
   updatedAt
   voteStatus
+  creator {
+    id
+    name
+  }
 }

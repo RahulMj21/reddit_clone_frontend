@@ -31,7 +31,7 @@ const Header: React.FC<HeaderProps> = ({}) => {
       }}
     >
       <Container
-        maxWidth="lg"
+        maxWidth="md"
         sx={{
           width: "100%",
           height: "4rem",
