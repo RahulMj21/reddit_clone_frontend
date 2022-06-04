@@ -1,6 +1,5 @@
 import { useRouter } from "next/router";
 import { useEffect } from "react";
-import toast from "react-hot-toast";
 import { usePostQuery } from "../generated/graphql";
 
 const useFetchSinglePost = () => {
@@ -15,12 +14,11 @@ const useFetchSinglePost = () => {
   });
   useEffect(() => {
     if (error || (!data?.post.post && !fetching)) {
-      toast.error("post not found");
       router.back();
     }
   }, [data, fetching, error, router]);
 
-  return { data, fetching, error, id } as const;
+  return { post: data?.post.post, fetching, error, id } as const;
 };
 
 export default useFetchSinglePost;

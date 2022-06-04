@@ -1,30 +1,19 @@
-import { Edit } from "@mui/icons-material";
-import DeleteIcon from "@mui/icons-material/Delete";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Box, Button, Typography } from "@mui/material";
 import NextLink from "next/link";
-import { useRouter } from "next/router";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
-import {
-  Post,
-  useDeletePostMutation,
-  useMeQuery,
-  useUpdatePostMutation,
-  useVoteMutation,
-} from "../generated/graphql";
+import { Post, useMeQuery, useVoteMutation } from "../generated/graphql";
+import CreateDeleteButtons from "./CreateDeleteButtons";
 
 interface SinglePostProps {
   post: Post;
 }
 
 const SinglePost: React.FC<SinglePostProps> = ({ post }) => {
-  const router = useRouter();
   const [voting, setVoting] = useState(false);
   const [_, submit] = useVoteMutation();
-  const [{ data: deletePostData, fetching: deletePostFetching }, deletePost] =
-    useDeletePostMutation();
   const [{ data }] = useMeQuery();
 
   const doVote = async (vote: string) => {
@@ -90,29 +79,7 @@ const SinglePost: React.FC<SinglePostProps> = ({ post }) => {
         </NextLink>
         <Typography mb={2}>{post.descriptionSnippet}</Typography>
         {post.creator.id === data?.me?.id && (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              marginLeft: "auto",
-              width: "7.5rem",
-              textAlign: "right",
-            }}
-          >
-            <Button
-              color="inherit"
-              onClick={() => router.push(`/post/update/${post.id}`)}
-            >
-              <Edit />
-            </Button>
-            <Button
-              disabled={deletePostFetching}
-              color="inherit"
-              onClick={() => deletePost({ id: post.id })}
-            >
-              <DeleteIcon />
-            </Button>
-          </Box>
+          <CreateDeleteButtons post={post} />
         )}
       </Box>
     </Box>
