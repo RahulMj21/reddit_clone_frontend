@@ -4,6 +4,7 @@ import { Box, Button, Typography } from "@mui/material";
 import NextLink from "next/link";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
+import { gql } from "urql";
 import { Post, useMeQuery, useVoteMutation } from "../generated/graphql";
 import CreateDeleteButtons from "./CreateDeleteButtons";
 
@@ -13,13 +14,43 @@ interface SinglePostProps {
 
 const SinglePost: React.FC<SinglePostProps> = ({ post }) => {
   const [voting, setVoting] = useState(false);
-  const [_, submit] = useVoteMutation();
-  const [{ data }] = useMeQuery();
+  const [submit] = useVoteMutation();
+  const { data } = useMeQuery();
 
   const doVote = async (vote: string) => {
     setVoting(true);
     const value = vote === "up" ? 1 : -1;
-    const response = await submit({ value, postId: post.id });
+    const response = await submit({
+      variables: { value, postId: post.id },
+      update: (cache) => {
+        const data = cache.readFragment({
+          id: `Post:${post.id}`,
+          fragment: gql`
+            fragment _ on Post {
+              id
+              points
+              voteStatus
+            }
+          `,
+        });
+        if (data) {
+          const newPoints = data.points + value;
+          cache.writeFragment({
+            id: `Post:${post.id}`,
+            fragment: gql`
+              fragment __ on Post {
+                points
+                voteStatus
+              }
+            `,
+            data: {
+              points: newPoints,
+              voteStatus: value,
+            },
+          });
+        }
+      },
+    });
     if (!response.data?.vote) return toast.error("login to continue");
     setVoting(false);
   };

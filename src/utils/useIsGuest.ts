@@ -4,14 +4,14 @@ import { useMeQuery } from "../generated/graphql";
 
 const useIsGuest = () => {
   const router = useRouter();
-  const [{ data, fetching }] = useMeQuery();
+  const { data, loading } = useMeQuery();
 
   useEffect(() => {
     if (data?.me) {
       router.push("/");
     }
-  }, [data, fetching]);
+  }, [data, loading]);
 
-  return { data, fetching } as const;
+  return { data, loading } as const;
 };
 export default useIsGuest;

@@ -1,14 +1,17 @@
 import { Button, Stack, TextField } from "@mui/material";
 import { NextPage } from "next";
-import { withUrqlClient } from "next-urql";
 import { useRouter } from "next/router";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import Loader from "../../src/components/Loader";
-import { useResetPasswordMutation } from "../../src/generated/graphql";
+import {
+  MeDocument,
+  MeQuery,
+  useResetPasswordMutation,
+} from "../../src/generated/graphql";
 import FormLayout from "../../src/layouts/FormLayout";
-import createUrqlClient from "../../src/utils/createUrqlClient";
 import useIsGuest from "../../src/utils/useIsGuest";
+import withApollo from "../../src/utils/apolloClient";
 
 type InputType = {
   newPassword: string;
@@ -17,8 +20,8 @@ type InputType = {
 const ResetPassword: NextPage<{}> = ({}) => {
   const router = useRouter();
   const token = router.query?.token;
-  const { fetching: fetchingMe } = useIsGuest();
-  const [{ fetching, error }, submit] = useResetPasswordMutation();
+  const { loading: fetchingMe } = useIsGuest();
+  const [submit, { loading, error }] = useResetPasswordMutation();
   const {
     register,
     handleSubmit,
@@ -29,7 +32,19 @@ const ResetPassword: NextPage<{}> = ({}) => {
   const handleResetPassword = async ({ newPassword }: InputType) => {
     if (error) toast.error(error.message);
 
-    const response = await submit({ token: token as string, newPassword });
+    const response = await submit({
+      variables: { token: token as string, newPassword },
+      update: (cache, { data }) => {
+        cache.writeQuery<MeQuery>({
+          query: MeDocument,
+          data: {
+            __typename: "Query",
+            me: data?.resetPassword.user,
+          },
+        });
+        cache.evict({ fieldName: "posts" });
+      },
+    });
 
     // success
     if (response.data?.resetPassword.user) {
@@ -50,7 +65,7 @@ const ResetPassword: NextPage<{}> = ({}) => {
     }
   };
 
-  return fetching || fetchingMe ? (
+  return loading || fetchingMe ? (
     <Loader />
   ) : (
     <FormLayout heading="ResetPassword">
@@ -86,4 +101,4 @@ const ResetPassword: NextPage<{}> = ({}) => {
   );
 };
 
-export default withUrqlClient(createUrqlClient)(ResetPassword);
+export default withApollo({ ssr: false })(ResetPassword);

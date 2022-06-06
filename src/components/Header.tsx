@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from "react";
-import { Link, Box, Typography, Container, Button, Stack } from "@mui/material";
+import { Box, Typography, Container, Button, Stack } from "@mui/material";
 import { useLogoutMutation, useMeQuery } from "../generated/graphql";
-import NextLink from "next/link";
 import { useRouter } from "next/router";
+import { useApolloClient } from "@apollo/client";
 
 interface HeaderProps {}
 
 const Header: React.FC<HeaderProps> = ({}) => {
   const router = useRouter();
+  const apolloClient = useApolloClient();
   const [domLoaded, setDomLoaded] = useState(false);
-  const [{ data }] = useMeQuery({
-    pause: !domLoaded,
+  const { data } = useMeQuery({
+    skip: !domLoaded,
   });
 
-  const [_, logout] = useLogoutMutation();
+  const [logout] = useLogoutMutation();
 
   useEffect(() => {
     setDomLoaded(true);
@@ -51,7 +52,14 @@ const Header: React.FC<HeaderProps> = ({}) => {
         {data?.me?.id ? (
           <Stack direction="row" alignItems="center" gap={"1.5rem"}>
             <Typography>{data.me.name}</Typography>
-            <Button onClick={async () => await logout()}>Logout</Button>
+            <Button
+              onClick={async () => {
+                await logout();
+                await apolloClient.resetStore();
+              }}
+            >
+              Logout
+            </Button>
             <Button
               onClick={() => router.push("/createpost")}
               variant="contained"

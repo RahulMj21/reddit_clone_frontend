@@ -3,20 +3,24 @@ import { Stack, TextField, Button } from "@mui/material";
 import { useForm } from "react-hook-form";
 import FormLayout from "../../src/layouts/FormLayout";
 import toast from "react-hot-toast";
-import { LoginInput, useLoginMutation } from "../../src/generated/graphql";
+import {
+  LoginInput,
+  MeDocument,
+  MeQuery,
+  useLoginMutation,
+} from "../../src/generated/graphql";
 import { useRouter } from "next/router";
-import { withUrqlClient } from "next-urql";
-import createUrqlClient from "../../src/utils/createUrqlClient";
 import useIsGuest from "../../src/utils/useIsGuest";
 import Loader from "../../src/components/Loader";
+import withApollo from "../../src/utils/apolloClient";
 
 interface LoginProps {}
 
 const Login: React.FC<LoginProps> = ({}) => {
-  const { fetching: fetchingMe } = useIsGuest();
+  const { loading: fetchingMe } = useIsGuest();
   const router = useRouter();
   const nextpath = router.query?.next ? router.query.next : "/";
-  const [{ error, fetching }, submit] = useLoginMutation();
+  const [submit, { error, loading }] = useLoginMutation();
 
   const {
     register,
@@ -28,7 +32,19 @@ const Login: React.FC<LoginProps> = ({}) => {
   const handleLogin = async (values: LoginInput) => {
     if (error) toast.error(error.message);
 
-    const response = await submit(values);
+    const response = await submit({
+      variables: values,
+      update: (cache, { data }) => {
+        cache.writeQuery<MeQuery>({
+          query: MeDocument,
+          data: {
+            __typename: "Query",
+            me: data?.login.user,
+          },
+        });
+        cache.evict({ fieldName: "posts" });
+      },
+    });
 
     // success
     if (response.data?.login.user) {
@@ -49,7 +65,7 @@ const Login: React.FC<LoginProps> = ({}) => {
     }
   };
 
-  return fetching || fetchingMe ? (
+  return loading || fetchingMe ? (
     <Loader />
   ) : (
     <FormLayout heading="Login">
@@ -94,4 +110,4 @@ const Login: React.FC<LoginProps> = ({}) => {
   );
 };
 
-export default withUrqlClient(createUrqlClient)(Login);
+export default withApollo({ ssr: false })(Login);

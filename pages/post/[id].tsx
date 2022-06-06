@@ -1,18 +1,20 @@
 import { Typography } from "@mui/material";
-import { withUrqlClient } from "next-urql";
 import Loader from "../../src/components/Loader";
 import HomeLayout from "../../src/layouts/HomeLayout";
-import createUrqlClient from "../../src/utils/createUrqlClient";
 import useFetchSinglePost from "../../src/utils/useFetchSinglePost";
 import { useMeQuery } from "../../src/generated/graphql";
 import CreateDeleteButtons from "../../src/components/CreateDeleteButtons";
 import { Post } from "../../src/generated/graphql";
+import withApollo from "../../src/utils/apolloClient";
+import { isServer } from "../../src/utils/isServer";
 
 const Post = () => {
-  const { post, fetching } = useFetchSinglePost();
-  const [{ data: meData, fetching: fetchingMe }] = useMeQuery();
+  const { post, loading } = useFetchSinglePost();
+  const { data: meData, loading: fetchingMe } = useMeQuery({
+    skip: isServer(),
+  });
 
-  return fetching || !post || fetchingMe ? (
+  return loading || !post || fetchingMe ? (
     <Loader />
   ) : (
     <HomeLayout>
@@ -29,4 +31,4 @@ const Post = () => {
   );
 };
 
-export default withUrqlClient(createUrqlClient, { ssr: true })(Post);
+export default withApollo({ ssr: true })(Post);

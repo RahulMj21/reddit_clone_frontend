@@ -7,18 +7,18 @@ const useFetchSinglePost = () => {
   const id =
     typeof router.query.id === "string" ? parseInt(router.query.id) : -1;
 
-  const [{ data, fetching, error }] = usePostQuery({
+  const { data, loading, error } = usePostQuery({
     variables: {
       id,
     },
   });
   useEffect(() => {
-    if (error || (!data?.post.post && !fetching)) {
+    if (error || (!data?.post.post && !loading)) {
       router.back();
     }
-  }, [data, fetching, error, router]);
+  }, [data, loading, error, router]);
 
-  return { post: data?.post.post, fetching, error, id } as const;
+  return { post: data?.post.post, loading, error, id } as const;
 };
 
 export default useFetchSinglePost;

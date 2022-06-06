@@ -15,7 +15,6 @@ import {
   MeDocument,
   MeQuery,
   RegisterMutation,
-  UpdatePostInput,
   VoteMutationVariables,
 } from "../generated/graphql";
 import { betterUpdateQuery } from "./betterUpdateQuery";
@@ -103,7 +102,7 @@ const createUrqlClient = (ssrExchange: any, ctx: any) => {
         },
         updates: {
           Mutation: {
-            vote: (_result, args, cache, info) => {
+            vote: (_result, args, cache, _) => {
               const { postId, value } = args as VoteMutationVariables;
               const data = cache.readFragment(
                 gql`
@@ -128,7 +127,7 @@ const createUrqlClient = (ssrExchange: any, ctx: any) => {
                 );
               }
             },
-            login: (_result, args, cache, info) => {
+            login: (_result, args, cache, _) => {
               betterUpdateQuery<LoginMutation, MeQuery>(
                 cache,
                 { query: MeDocument },
@@ -144,7 +143,7 @@ const createUrqlClient = (ssrExchange: any, ctx: any) => {
               );
               invalidatePostCache(cache);
             },
-            register: (_result, args, cache, info) => {
+            register: (_result, args, cache, _) => {
               betterUpdateQuery<RegisterMutation, MeQuery>(
                 cache,
                 { query: MeDocument },
@@ -159,7 +158,7 @@ const createUrqlClient = (ssrExchange: any, ctx: any) => {
                 }
               );
             },
-            logout: (_result, args, cache, info) => {
+            logout: (_result, args, cache, _) => {
               betterUpdateQuery<LogoutMutation, MeQuery>(
                 cache,
                 { query: MeDocument },
@@ -175,10 +174,10 @@ const createUrqlClient = (ssrExchange: any, ctx: any) => {
               );
               invalidatePostCache(cache);
             },
-            createPost: (_result, args, cache, info) => {
+            createPost: (_result, __, cache, _) => {
               invalidatePostCache(cache);
             },
-            deletePost: (_result, args, cache, info) => {
+            deletePost: (_result, args, cache, _) => {
               cache.invalidate({
                 __typename: "Post",
                 id: (args as DeletePostMutationVariables).id,

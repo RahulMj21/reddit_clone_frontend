@@ -1,7 +1,6 @@
 import { Button, Stack, TextField } from "@mui/material";
-import { withUrqlClient } from "next-urql";
 import { useRouter } from "next/router";
-import React, { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import Header from "../../../src/components/Header";
@@ -11,20 +10,19 @@ import {
   useUpdatePostMutation,
 } from "../../../src/generated/graphql";
 import FormLayout from "../../../src/layouts/FormLayout";
-import createUrqlClient from "../../../src/utils/createUrqlClient";
 import useFetchSinglePost from "../../../src/utils/useFetchSinglePost";
 import { useIsAuth } from "../../../src/utils/useIsAuth";
+import withApollo from "../../../src/utils/apolloClient";
 
 const UpdatePost = ({}) => {
-  const [defaults, setDefaults] = useState({ title: "", description: "" });
   const router = useRouter();
   const {
-    data: existingPost,
-    fetching: existingPostFetching,
+    post: existingPost,
+    loading: existingPostFetching,
     id,
   } = useFetchSinglePost();
-  const { fetching: fetchingMe, data: dataMe } = useIsAuth();
-  const [{ fetching, error, data }, submit] = useUpdatePostMutation();
+  const { loading: fetchingMe, data: dataMe } = useIsAuth();
+  const [submit, { loading, error, data }] = useUpdatePostMutation();
   const {
     register,
     handleSubmit,
@@ -36,7 +34,7 @@ const UpdatePost = ({}) => {
   const handleUpdatePost = async (input: PostInput) => {
     if (error) toast.error(error.message);
 
-    const response = await submit({ input: { id, ...input } });
+    const response = await submit({ variables: { input: { id, ...input } } });
 
     // success
     if (response.data?.updatePost?.post) {
@@ -47,7 +45,7 @@ const UpdatePost = ({}) => {
     if (response.data?.updatePost?.errors) {
       const errors = response.data.updatePost.errors;
 
-      errors.forEach((error) => {
+      errors.forEach((error: any) => {
         setError(error.field as "title" | "description", {
           type: error.__typename,
           message: error.message,
@@ -58,12 +56,12 @@ const UpdatePost = ({}) => {
   };
 
   useEffect(() => {
-    setValue("title", existingPost?.post.post?.title as string);
-    setValue("description", existingPost?.post.post?.description as string);
-  }, [existingPost?.post.post]);
+    setValue("title", existingPost?.title as string);
+    setValue("description", existingPost?.description as string);
+  }, [existingPost]);
 
-  return (fetching && !data?.updatePost?.post) ||
-    (existingPostFetching && !existingPost?.post.post) ||
+  return (loading && !data?.updatePost?.post) ||
+    (existingPostFetching && !existingPost) ||
     (fetchingMe && !dataMe?.me) ? (
     <Loader />
   ) : (
@@ -120,4 +118,4 @@ const UpdatePost = ({}) => {
   );
 };
 
-export default withUrqlClient(createUrqlClient, { ssr: true })(UpdatePost);
+export default withApollo({ ssr: false })(UpdatePost);

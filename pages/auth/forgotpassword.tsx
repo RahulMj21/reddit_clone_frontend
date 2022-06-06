@@ -1,5 +1,5 @@
 import { Button, Stack, TextField } from "@mui/material";
-import { withUrqlClient } from "next-urql";
+import withApollo from "../../src/utils/apolloClient";
 import React from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -9,14 +9,13 @@ import {
   useForgotPasswordMutation,
 } from "../../src/generated/graphql";
 import FormLayout from "../../src/layouts/FormLayout";
-import createUrqlClient from "../../src/utils/createUrqlClient";
 import useIsGuest from "../../src/utils/useIsGuest";
 
 interface ForgotpasswordProps {}
 
 const Forgotpassword: React.FC<ForgotpasswordProps> = ({}) => {
-  const { fetching: fetchingMe } = useIsGuest();
-  const [{ fetching, error }, submit] = useForgotPasswordMutation();
+  const { loading: fetchingMe } = useIsGuest();
+  const [submit, { loading, error }] = useForgotPasswordMutation();
   const {
     register,
     handleSubmit,
@@ -29,7 +28,7 @@ const Forgotpassword: React.FC<ForgotpasswordProps> = ({}) => {
   ) => {
     if (error) toast.error(error.message);
 
-    const response = await submit(values);
+    const response = await submit({ variables: values });
 
     // success
     if (response.data?.forgotPassword.success) {
@@ -40,7 +39,7 @@ const Forgotpassword: React.FC<ForgotpasswordProps> = ({}) => {
     if (response.data?.forgotPassword.errors) {
       const errors = response.data.forgotPassword.errors;
 
-      errors.forEach((error) => {
+      errors.forEach((error: any) => {
         setError(error.field as "email", {
           type: error.__typename,
           message: error.message,
@@ -50,7 +49,7 @@ const Forgotpassword: React.FC<ForgotpasswordProps> = ({}) => {
     }
   };
 
-  return fetching || fetchingMe ? (
+  return loading || fetchingMe ? (
     <Loader />
   ) : (
     <FormLayout heading="Forgot Password">
@@ -80,4 +79,4 @@ const Forgotpassword: React.FC<ForgotpasswordProps> = ({}) => {
   );
 };
 
-export default withUrqlClient(createUrqlClient)(Forgotpassword);
+export default withApollo({ ssr: false })(Forgotpassword);

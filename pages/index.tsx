@@ -1,20 +1,17 @@
 import type { NextPage } from "next";
 import { Button, Stack, Typography } from "@mui/material";
-import createUrqlClient from "../src/utils/createUrqlClient";
-import { withUrqlClient } from "next-urql";
 import { Post, usePostsQuery } from "../src/generated/graphql";
-import { useState } from "react";
 import SinglePost from "../src/components/SinglePost";
 import HomeLayout from "../src/layouts/HomeLayout";
+import withApollo from "../src/utils/apolloClient";
 
 const Home: NextPage = () => {
-  const [variables, setVariables] = useState({
-    limit: 15,
-    cursor: null as null | string,
-  });
-
-  const [{ data, fetching }] = usePostsQuery({
-    variables,
+  const { data, loading, variables, fetchMore } = usePostsQuery({
+    variables: {
+      limit: 15,
+      cursor: null,
+    },
+    notifyOnNetworkStatusChange: true,
   });
 
   return (
@@ -30,10 +27,28 @@ const Home: NextPage = () => {
           {data.posts.posts && data.posts.hasMore && (
             <Button
               onClick={() =>
-                setVariables({
-                  limit: variables.limit,
-                  cursor:
-                    data.posts.posts![data.posts.posts!.length - 1].createdAt,
+                fetchMore({
+                  variables: {
+                    limit: variables?.limit,
+                    cursor:
+                      data.posts.posts![data.posts.posts!.length - 1].createdAt,
+                  },
+                  /* updateQuery: (prev, { fetchMoreResult }): PostsQuery => {
+                    if (!fetchMoreResult) {
+                      return prev;
+                    }
+                    return {
+                      __typename: "Query",
+                      posts: {
+                        __typename: "PaginatedPosts",
+                        hasMore: fetchMoreResult.posts.hasMore,
+                        posts: [
+                          ...(prev.posts.posts as Post[]),
+                          ...(fetchMoreResult.posts.posts as Post[]),
+                        ],
+                      },
+                    };
+                  },*/
                 })
               }
               variant="contained"
@@ -54,7 +69,7 @@ const Home: NextPage = () => {
             </Button>
           )}
         </Stack>
-      ) : fetching ? (
+      ) : loading ? (
         <Typography
           sx={{ color: "gray" }}
           variant="h1"
@@ -79,4 +94,4 @@ const Home: NextPage = () => {
   );
 };
 
-export default withUrqlClient(createUrqlClient, { ssr: true })(Home);
+export default withApollo({ ssr: true })(Home);

@@ -10,7 +10,7 @@ interface UpdateDeleteButtonsProps {
 
 const UpdateDeleteButtons: React.FC<UpdateDeleteButtonsProps> = ({ post }) => {
   const router = useRouter();
-  const [{ fetching }, deletePost] = useDeletePostMutation();
+  const [deletePost, { loading }] = useDeletePostMutation();
 
   return (
     <Box
@@ -29,9 +29,16 @@ const UpdateDeleteButtons: React.FC<UpdateDeleteButtonsProps> = ({ post }) => {
         <Edit />
       </Button>
       <Button
-        disabled={fetching}
+        disabled={loading}
         color="inherit"
-        onClick={() => deletePost({ id: post.id })}
+        onClick={() =>
+          deletePost({
+            variables: { id: post.id },
+            update: (cache) => {
+              cache.evict({ id: `Post:${post.id}` });
+            },
+          })
+        }
       >
         <Delete />
       </Button>

@@ -1,24 +1,18 @@
 import { Button, Stack, TextField } from "@mui/material";
-import { withUrqlClient } from "next-urql";
 import { useRouter } from "next/router";
-import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import Header from "../src/components/Header";
 import Loader from "../src/components/Loader";
-import {
-  PostInput,
-  useCreatePostMutation,
-  useMeQuery,
-} from "../src/generated/graphql";
+import { PostInput, useCreatePostMutation } from "../src/generated/graphql";
 import FormLayout from "../src/layouts/FormLayout";
-import createUrqlClient from "../src/utils/createUrqlClient";
 import { useIsAuth } from "../src/utils/useIsAuth";
+import withApollo from "../src/utils/apolloClient";
 
-const CreatePost: React.FC<{}> = ({}) => {
+const CreatePost = () => {
   const router = useRouter();
-  const { fetching: fetchingMe, data: dataMe } = useIsAuth();
-  const [{ fetching, error, data }, submit] = useCreatePostMutation();
+  const { loading: fetchingMe, data: dataMe } = useIsAuth();
+  const [submit, { loading: fetching, error, data }] = useCreatePostMutation();
   const {
     register,
     handleSubmit,
@@ -29,7 +23,12 @@ const CreatePost: React.FC<{}> = ({}) => {
   const handleCreatePost = async (input: PostInput) => {
     if (error) toast.error(error.message);
 
-    const response = await submit({ input });
+    const response = await submit({
+      variables: { input },
+      update: (cache) => {
+        cache.evict({ fieldName: "posts" });
+      },
+    });
 
     // success
     if (response.data?.createPost?.post) {
@@ -107,4 +106,4 @@ const CreatePost: React.FC<{}> = ({}) => {
   );
 };
 
-export default withUrqlClient(createUrqlClient)(CreatePost);
+export default withApollo({ ssr: true })(CreatePost);

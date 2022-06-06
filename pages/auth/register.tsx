@@ -3,22 +3,23 @@ import { Stack, TextField, Button } from "@mui/material";
 import { useForm } from "react-hook-form";
 import FormLayout from "../../src/layouts/FormLayout";
 import {
+  MeDocument,
+  MeQuery,
   RegisterInput,
   useRegisterMutation,
 } from "../../src/generated/graphql";
 import toast from "react-hot-toast";
 import { useRouter } from "next/router";
-import createUrqlClient from "../../src/utils/createUrqlClient";
-import { withUrqlClient } from "next-urql";
 import useIsGuest from "../../src/utils/useIsGuest";
 import Loader from "../../src/components/Loader";
+import withApollo from "../../src/utils/apolloClient";
 
 interface RegisterProps {}
 
 const Register: React.FC<RegisterProps> = ({}) => {
   const router = useRouter();
-  const { fetching: fetchingMe } = useIsGuest();
-  const [{ fetching, error }, submit] = useRegisterMutation();
+  const { loading: fetchingMe } = useIsGuest();
+  const [submit, { loading, error }] = useRegisterMutation();
 
   const {
     register,
@@ -30,7 +31,18 @@ const Register: React.FC<RegisterProps> = ({}) => {
   const handleRegister = async (values: RegisterInput) => {
     if (error) toast.error(error.message);
 
-    const response = await submit(values);
+    const response = await submit({
+      variables: values,
+      update: (cache, { data }) => {
+        cache.writeQuery<MeQuery>({
+          query: MeDocument,
+          data: {
+            __typename: "Query",
+            me: data?.register.user,
+          },
+        });
+      },
+    });
 
     if (response.data?.register.user) {
       router.push("/");
@@ -49,7 +61,7 @@ const Register: React.FC<RegisterProps> = ({}) => {
     }
   };
 
-  return fetching || fetchingMe ? (
+  return loading || fetchingMe ? (
     <Loader />
   ) : (
     <FormLayout heading="Register">
@@ -107,4 +119,4 @@ const Register: React.FC<RegisterProps> = ({}) => {
   );
 };
 
-export default withUrqlClient(createUrqlClient)(Register);
+export default withApollo({ ssr: false })(Register);
